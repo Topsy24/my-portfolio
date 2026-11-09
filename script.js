@@ -1,53 +1,68 @@
-// ── 1. Navbar: Add shadow when user scrolls down ──
 const header = document.querySelector('header');
-
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 50) {
-    header.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.5)';
-  } else {
-    header.style.boxShadow = 'none';
-  }
-});
-
-
-// ── 2. Active nav link highlights based on which section you're in ──
-const sections = document.querySelectorAll('section');
+const toTop = document.getElementById('to-top');
+const sections = document.querySelectorAll('main section');
 const navLinks = document.querySelectorAll('nav ul li a');
+const menuToggle = document.getElementById('menu-toggle');
+const navMenu = document.getElementById('nav-menu');
 
 window.addEventListener('scroll', () => {
-  let current = '';
+  header.style.boxShadow = window.scrollY > 50 ? '0 4px 30px rgba(0, 0, 0, 0.5)' : 'none';
+  toTop.classList.toggle('show', window.scrollY > 600);
 
+  let current = '';
   sections.forEach(section => {
-    const sectionTop = section.offsetTop - 120;
-    if (window.scrollY >= sectionTop) {
+    if (window.scrollY >= section.offsetTop - 140) {
       current = section.getAttribute('id');
     }
   });
 
   navLinks.forEach(link => {
-    link.classList.remove('active');
-    if (link.getAttribute('href') === `#${current}`) {
-      link.classList.add('active');
-    }
+    link.classList.toggle('active', link.getAttribute('href') === `#${current}`);
   });
 });
 
+toTop.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
-// ── 3. Fade-in animation as sections scroll into view ──
-const fadeElements = document.querySelectorAll('section, .project-card');
-
-const observer = new IntersectionObserver((entries) => {
+const revealObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
+      revealObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.1 });
+}, { threshold: 0.12 });
 
-fadeElements.forEach(el => observer.observe(el));
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
+const roles = ['Ethical Hacker', 'Network Defender', 'Digital Forensics Learner', 'Security Enthusiast'];
+const typedEl = document.getElementById('typed');
+let roleIndex = 0;
+let charIndex = 0;
+let deleting = false;
 
-// ── 4. Form: Show a thank you message after submission ──
+function type() {
+  const word = roles[roleIndex];
+  typedEl.textContent = deleting ? word.slice(0, charIndex--) : word.slice(0, charIndex++);
+
+  let delay = deleting ? 45 : 85;
+
+  if (!deleting && charIndex > word.length) {
+    deleting = true;
+    delay = 1500;
+  } else if (deleting && charIndex < 0) {
+    deleting = false;
+    roleIndex = (roleIndex + 1) % roles.length;
+    charIndex = 0;
+    delay = 400;
+  }
+
+  setTimeout(type, delay);
+}
+
+if (typedEl) type();
+
 const form = document.querySelector('form');
 
 if (form) {
@@ -88,27 +103,18 @@ if (form) {
   });
 }
 
-
-// ── 5. Mobile menu toggle ──
-const menuToggle = document.createElement('button');
-menuToggle.classList.add('menu-toggle');
-menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-document.querySelector('nav').appendChild(menuToggle);
-
-const navMenu = document.querySelector('nav ul');
-
 menuToggle.addEventListener('click', () => {
-  navMenu.classList.toggle('open');
-  const isOpen = navMenu.classList.contains('open');
-  menuToggle.innerHTML = isOpen
-    ? '<i class="fas fa-times"></i>'
-    : '<i class="fas fa-bars"></i>';
+  const isOpen = navMenu.classList.toggle('open');
+  menuToggle.setAttribute('aria-expanded', isOpen);
+  menuToggle.innerHTML = isOpen ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
 });
 
-// Close menu when a link is clicked
 navLinks.forEach(link => {
   link.addEventListener('click', () => {
     navMenu.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', false);
     menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
   });
 });
+
+document.getElementById('year').textContent = new Date().getFullYear();
